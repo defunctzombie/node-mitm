@@ -1,3 +1,12 @@
+## 1.0.2 (Nov 23, 2014)
+- Fixes tests by locking Mocha to v0.18.  
+  For more info on Mocha's ill-behavior, see
+  [#1195](https://github.com/mochajs/mocha/issues/1195).
+
+## 1.0.1 (Nov 23, 2014)
+- Fixes bypassing TLS connections.  
+  Thanks to [Roman Shtylman](https://github.com/defunctzombie)!
+
 ## 1.0.0 (Sep 29, 2014)
 - Adds compatibility with Node v0.11.14.
 

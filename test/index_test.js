@@ -197,6 +197,10 @@ describe("Mitm", function() {
     })
 
     describe("when bypassed", function() {
+      beforeEach(function() { this.sinon = Sinon.sandbox.create() })
+      afterEach(function() { this.mitm.disable() })
+      afterEach(function() { this.sinon.restore() })
+
       it("must not intercept", function(done) {
         this.mitm.on("connect", function(client) { client.bypass() })
 
@@ -205,6 +209,17 @@ describe("Mitm", function() {
           err.message.must.include("ECONNREFUSED")
           done()
         })
+      })
+
+      it("must call original Net.connect", function() {
+        this.mitm.disable()
+        var connect = this.sinon.spy(Net, "connect")
+        this.mitm = intercept()
+        this.mitm.on("connect", function(client) { client.bypass() })
+
+        Net.connect({host: "127.0.0.1", port: 9}).on("error", noop)
+        connect.callCount.must.equal(1)
+        connect.firstCall.args[0].must.eql({host: "127.0.0.1", port: 9})
       })
 
       it("must not call back twice on connect given callback", function(done) {
@@ -223,7 +238,7 @@ describe("Mitm", function() {
         this.mitm.on("connect", function(client) { client.bypass() })
         var onConnection = Sinon.spy()
         this.mitm.on("connection", onConnection)
-        Net.connect({host: "127.0.0.1", port: 9}).on("error", function() {})
+        Net.connect({host: "127.0.0.1", port: 9}).on("error", noop)
         onConnection.callCount.must.equal(0)
       })
     })
@@ -241,6 +256,23 @@ describe("Mitm", function() {
 
     it("must set authorized property", function() {
       Tls.connect({host: "foo"}).authorized.must.be.true()
+    })
+
+    describe("when bypassed", function() {
+      beforeEach(function() { this.sinon = Sinon.sandbox.create() })
+      afterEach(function() { this.mitm.disable() })
+      afterEach(function() { this.sinon.restore() })
+
+      it("must call original Tls.connect", function() {
+        this.mitm.disable()
+        var connect = this.sinon.spy(Tls, "connect")
+        this.mitm = intercept()
+        this.mitm.on("connect", function(client) { client.bypass() })
+
+        Tls.connect({host: "127.0.0.1", port: 9}).on("error", noop)
+        connect.callCount.must.equal(1)
+        connect.firstCall.args[0].must.eql({host: "127.0.0.1", port: 9})
+      })
     })
   })
 
@@ -409,7 +441,7 @@ describe("Mitm", function() {
         this.mitm.on("request", function(req, res) { res.end() })
 
         client.on("response", function(res) {
-          res.on("data", function() {})
+          res.on("data", noop)
           res.on("end", done)
         })
       })
@@ -422,3 +454,5 @@ describe("Mitm", function() {
     })
   })
 })
+
+function noop() {}
